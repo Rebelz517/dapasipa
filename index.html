@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+<title>Website Pacar Spesial - Foto Bisa Dihapus Semua</title>
+<style>
+  /* Reset dan dasar */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  body, html {
+    height: 100%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #ffdde1 0%, #ee9ca7 100%);
+    color: #333;
+    touch-action: manipulation;
+    overflow: hidden;
+  }
+  #app {
+    height: 100vh;
+    width: 100vw;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* LOGIN */
+  #login-container {
+    position: relative;
+    background: rgba(255 255 255 / 0.95);
+    padding: 2rem;
+    border-radius: 18px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    width: 90vw;
+    max-width: 320px;
+    text-align: center;
+    animation: fadeInMoveDown 1s ease forwards;
+    z-index: 10;
+  }
+  #login-container.hiding {
+    animation: fadeOutMoveUp 1s forwards;
+  }
+  #login-container h2 {
+    font-weight: 700;
+    color: #e91e63;
+    margin-bottom: 1rem;
+    font-size: 1.8rem;
+    letter-spacing: 0.05em;
+  }
+  #login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  #login-form input {
+    padding: 0.8rem 1rem;
+    border-radius: 10px;
+    border: 2px solid #e91e63;
+    font-size: 1rem;
+    outline-offset: 3px;
+    transition: outline-color 0.3s;
+  }
+  #login-form input:focus {
+    outline: 3px solid #f48fb1;
+  }
+  #login-form button {
+    background-color: #e91e63;
+    color: white;
+    font-weight: 700;
+    border: none;
+    padding: 0.85rem;
+    border-radius: 14px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgb(233 30 99 / 0.7);
+    transition: background-color 0.3s;
+  }
+  #login-form button:hover, #login-form button:focus {
+    background-color: #d81b60;
+  }
+
+  /* WELCOME */
+  #welcome-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #f50057;
+    z-index: 8;
+    text-align: center;
+    user-select: none;
+    opacity: 0;
+    pointer-events: none;
+  }
+  #welcome-container.show {
+    animation: welcomeFadeIn 2s forwards;
+    pointer-events: auto;
+  }
+  #welcome-text {
+    font-size: 3rem;
+    font-weight: 900;
+    letter-spacing: 0.15em;
+    opacity: 0;
+    animation: textPopIn 2s forwards;
+    animation-delay: 0.2s;
+    color: #f50057;
+    text-shadow: 0px 0px 16px #ff4081aa;
+  }
+  /* bunga dan love animasi */
+  #particles-container {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: visible;
+    z-index: -1;
+  }
+
+  /* bentuk bunga dan hati */
+  .particle {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    opacity: 0.8;
+    animation-timing-function: ease-in-out;
+  }
+  .flower {
+    background: radial-gradient(circle at 50% 50%, #ffafcc 40%, #ffc9de 100%);
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    box-shadow:
+      inset 0 0 5px 0 #d81b60,
+      0 0 10px 3px #d81b60aa;
+  }
+  .heart {
+    background: linear-gradient(135deg, #ff4081 0%, #f50057 100%);
+    clip-path: polygon(50% 0%, 61% 9%, 68% 17%, 75% 27%, 79% 37%, 80% 48%, 78% 57%, 74% 64%, 66% 72%, 57% 78%, 50% 80%, 43% 78%, 34% 72%, 26% 64%, 22% 57%, 20% 48%, 21% 37%, 25% 27%, 32% 17%, 39% 9%);
+    filter: drop-shadow(0 0 3px #d50045);
+  }
+
+  /* MAIN FULL */
+  #main-container {
+    background: #fff0f6;
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+    display: none;
+    flex-direction: column;
+    gap: 1.5rem;
+    height: 100vh;
+    width: 100vw;
+    padding: 2rem 2rem 3rem 2rem;
+    overflow-y: auto;
+  }
+  #main-container::-webkit-scrollbar {
+    width: 6px;
+  }
+  #main-container::-webkit-scrollbar-thumb {
+    background-color: #d81b60a0;
+    border-radius: 3px;
+  }
+  #main-container.show {
+    display: flex;
+    animation: fadeInMoveUp 1s ease forwards;
+  }
+  #main-container h2 {
+    text-align: center;
+    color: #d81b60;
+    font-weight: 700;
+    font-size: 2.2rem;
+  }
+  #main-container p {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    text-align: center;
+    color: #51113d;
+    font-style: italic;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  /* Foto kenangan grid dengan jarak rapat saat autoSize */
+  #photo-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(var(--photo-size,140px),1fr));
+    gap: var(--photo-gap,14px);
+    padding: 0 10px;
+  }
+  #photo-gallery img {
+    width: 100%;
+    height: var(--photo-size,120px);
+    object-fit: cover;
+    border-radius: 16px;
+    box-shadow: 0 3px 8px rgb(216 27 96 / 0.5);
+    cursor: pointer;
+    transition: transform 0.3s ease, height 0.3s ease, width 0.3s ease;
+  }
+  #photo-gallery img:hover {
+    transform: scale(1.12);
+  }
+
+  /* Kontrol foto & ukuran */
+  #photo-controls {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    padding: 0 10px;
+  }
+  #photo-file-input {
+    cursor: pointer;
+    padding: 0.7rem 1.2rem;
+    border-radius: 14px;
+    border: 2px solid #d81b60;
+    font-size: 1.1rem;
+    outline-offset: 3px;
+    background-color: white;
+    color: #d81b60;
+    font-weight: 700;
+    transition: background-color 0.3s, color 0.3s;
+    flex: 1 1 180px;
+    text-align: center;
+  }
+  #photo-file-input:hover {
+    background-color: #d81b60;
+    color: white;
+  }
+  #add-photo-button {
+    padding: 0.75rem 1.2rem;
+    background-color: #d81b60;
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgb(216 27 96 / 0.6);
+    transition: background-color 0.3s;
+    flex: 0 0 auto;
+  }
+  #add-photo-button:hover {
+    background-color: #b3134e;
+  }
+
+  /* Kontrol ukuran foto */
+  #size-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  #size-controls label {
+    font-weight: 700;
+    color: #ab2f59;
+    user-select: none;
+  }
+  #photo-size-range {
+    cursor: pointer;
+    width: 140px;
+  }
+  #auto-size-checkbox {
+    cursor: pointer;
+  }
+
+  /* Kutipan bijak */
+  #quotes {
+    font-style: italic;
+    color: #6a1b4d;
+    font-weight: 600;
+    text-align: center;
+    user-select: none;
+    padding: 0 1rem;
+    font-size: 1.15rem;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  /* Pemutar musik */
+  #music-player {
+    background: #ffe4ec;
+    padding: 1.2rem 1.5rem 1rem 1.5rem;
+    border-radius: 20px;
+    box-shadow: 0 6px 16px rgb(233 30 99 / 0.4);
+    max-width: 720px;
+    margin: 1.5rem auto 1.5rem auto;
+  }
+  #music-player h3 {
+    text-align: center;
+    color: #ad1457;
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+  }
+  #song-list {
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+  .song-button {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f06292, #ec407a);
+    border: none;
+    box-shadow: 0 0 22px #f48fb1aa;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    animation: rotateSongButton 4s linear infinite;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: white;
+    user-select: none;
+  }
+  .song-button.selected {
+    box-shadow: 0 0 32px 6px #d81b60;
+    animation-play-state: paused;
+  }
+  .song-button:focus-visible {
+    outline: 3px solid #d81b60;
+  }
+  .song-button span {
+    pointer-events: none;
+  }
+
+  #audio-player {
+    width: 100%;
+    border-radius: 18px;
+  }
+
+  /* Animations */
+  @keyframes fadeInMoveDown {
+    from {
+      opacity: 0;
+      transform: translateY(-50px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes fadeOutMoveUp {
+    to {
+      opacity: 0;
+      transform: translateY(-50px);
+    }
+  }
+  @keyframes welcomeFadeIn {
+    0% {opacity: 0;}
+    50% {opacity: 1;}
+    100% {opacity: 1;}
+  }
+  @keyframes textPopIn {
+    0% {
+      opacity: 0;
+      transform: scale(0.7);
+      filter: drop-shadow(0 0 0px #f50057);
+    }
+    60% {
+      opacity: 1;
+      transform: scale(1.2);
+      filter: drop-shadow(0 0 20px #ff4081);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+      filter: drop-shadow(0 0 8px #ff4081aa);
+    }
+  }
+  @keyframes rotateSongButton {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    #login-container {
+      width: 95vw;
+    }
+    #welcome-text {
+      font-size: 2.2rem;
+    }
+    #main-container {
+      padding: 1.4rem 1rem 2rem 1rem;
+    }
+    #photo-gallery {
+      grid-template-columns: repeat(auto-fit, minmax(var(--photo-size,110px),1fr));
+      gap: var(--photo-gap,8px);
+    }
+    #photo-gallery img {
+      height: var(--photo-size,80px);
+    }
+    #photo-controls {
+      gap: 8px;
+      padding: 0 5px;
+    }
+    #photo-file-input {
+      flex: 1 1 100%;
+      padding: 0.6rem 0.8rem;
+      font-size: 1rem;
+    }
+    #add-photo-button {
+      width: 100%;
+      padding: 0.6rem 0;
+      font-size: 1rem;
+    }
+    #size-controls {
+      flex-direction: column;
+      gap: 6px;
+      align-items: flex-start;
+    }
+    #music-player {
+      max-width: 100vw;
+      margin: 1rem auto;
+      padding: 1rem 1rem 0.8rem 1rem;
+    }
+    #music-player h3 {
+      font-size: 1.1rem;
+      margin-bottom: 0.6rem;
+    }
+    .song-button {
+      width: 48px;
+      height: 48px;
+      font-size: 0.75rem;
+      box-shadow: 0 0 14px #f48fb1aa;
+    }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- LOGIN -->
+  <section id="login-container" aria-label="Form login">
+    <h2>Login untuk Masuk</h2>
+    <form id="login-form" autocomplete="off" novalidate>
+      <input type="text" id="username" placeholder="Username" aria-label="Username" required autocomplete="username" />
+      <input type="password" id="password" placeholder="Password" aria-label="Password" required autocomplete="current-password" />
+      <button type="submit" aria-label="Login">Masuk</button>
+    </form>
+  </section>
+
+  <!-- WELCOME -->
+  <section id="welcome-container" aria-live="polite" aria-label="Pesan selamat datang">
+    <h1 id="welcome-text">WELCOME</h1>
+    <div id="particles-container" aria-hidden="true"></div>
+  </section>
+
+  <!-- MAIN PAGE -->
+  <main id="main-container" tabindex="-1" aria-label="Halaman utama website">
+    <h2>Tentang Website Ini</h2>
+    <p>Website ini dibuat untuk menunjukkan cinta dan kenangan kita bersama, penuh kasih dan kenangan indah.</p>
+    
+    <!-- Galeri Foto -->
+    <section aria-label="Galeri foto kenangan">
+      <div id="photo-gallery" tabindex="0" aria-live="polite" aria-relevant="additions removals"></div>
+      <div id="photo-controls">
+        <label for="photo-file-input" id="photo-file-label" 
+          style="user-select:none; cursor:pointer; display:flex; justify-content:center; align-items:center; border:2px dashed #d81b60; border-radius:12px; height:40px; font-weight:700; color:#d81b60; flex-grow:1;">
+          Pilih Foto dari Galeri
+        </label>
+        <input 
+          type="file" 
+          id="photo-file-input" 
+          accept="image/*" 
+          multiple 
+          style="display:none;" 
+          aria-label="Pilih foto dari galeri perangkat"
+        />
+        <button id="add-photo-button" aria-label="Tambahkan foto ke galeri">Tambah Foto</button>
+      </div>
+
+      <!-- Kontrol ukuran foto -->
+      <div id="size-controls" style="margin-top: 0.8rem;">
+        <label for="photo-size-range">Ukuran Foto: <span id="photo-size-label">120</span> px</label>
+        <input type="range" id="photo-size-range" min="60" max="300" value="120" />
+        <label style="display:flex; align-items:center; gap:6px; font-weight:700; color:#ab2f59; user-select:none;">
+          <input type="checkbox" id="auto-size-checkbox" /> Otomatis sesuaikan dengan ukuran asli foto
+        </label>
+      </div>
+    </section>
+
+    <!-- Kata Bijak -->
+    <section id="quotes" aria-live="polite" aria-atomic="true" tabindex="0"></section>
+
+    <!-- Pemutar Musik -->
+    <section id="music-player" aria-label="Pemutar musik">
+      <h3>Pilih Lagu</h3>
+      <div id="song-list" role="list"></div>
+      <audio id="audio-player" controls aria-label="Pemutar audio">
+        Browser tidak mendukung elemen audio.
+      </audio>
+    </section>
+  </main>
+
+</div>
+
+<script>
+  (() => {
+    "use strict";
+
+    // Lagu default mp3 sumber bebas
+    const songs = [
+      {id: "song1", name: "A Thousand Years", src: "1.mp3"},
+      {id: "song2", name: "Angel Baby", src: "2.mp3"},
+      {id: "song3", name: "Perfect", src: "3.mp3"},
+    ];
+
+    const quotes = [
+      "Cinta bukan hanya tentang saling memandang, tapi bersama-sama melihat ke arah yang sama.",
+      "Hubungan yang baik adalah ketika dua orang bisa judes, tapi tidak sampai tinggalkan luka.",
+      "Kepercayaan adalah pondasi dari cinta sejati.",
+      "Setiap detik bersama adalah memori yang tak ternilai harganya.",
+    ];
+
+    const loginContainer = document.getElementById("login-container");
+    const welcomeContainer = document.getElementById("welcome-container");
+    const mainContainer = document.getElementById("main-container");
+    const loginForm = document.getElementById("login-form");
+    const photoGallery = document.getElementById("photo-gallery");
+    const photoFileInput = document.getElementById("photo-file-input");
+    const addPhotoBtn = document.getElementById("add-photo-button");
+    const quotesContainer = document.getElementById("quotes");
+    const songListContainer = document.getElementById("song-list");
+    const audioPlayer = document.getElementById("audio-player");
+
+    const photoSizeRange = document.getElementById("photo-size-range");
+    const photoSizeLabel = document.getElementById("photo-size-label");
+    const autoSizeCheckbox = document.getElementById("auto-size-checkbox");
+    const particlesContainer = document.getElementById("particles-container");
+
+    let currentQuoteIndex = 0;
+
+    // Ini array foto lengkap yang akan disimpan di localStorage dengan base64 atau url (default sudah include)
+    let allPhotos = [];
+
+    let currentSongId = null;
+    let currentPhotoSize = 120;
+    let autoSize = false;
+
+    // Load allPhotos dari localStorage, jika tidak ada, set dengan default foto pertama kali
+    function loadAllPhotos() {
+      try {
+        const photosJSON = localStorage.getItem('allPhotos');
+        if (photosJSON) {
+          const arr = JSON.parse(photosJSON);
+          if(Array.isArray(arr) && arr.length) {
+            allPhotos = arr;
+            return;
+          }
+        }
+      } catch {}
+      // Default photo URLs awal, disimpan langsung ke allPhotos untuk persistensi hapus dll
+      allPhotos = [
+        "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=400&q=80",
+        "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80"
+      ];
+      saveAllPhotos();
+    }
+    function saveAllPhotos() {
+      localStorage.setItem('allPhotos', JSON.stringify(allPhotos));
+    }
+
+    loginForm.addEventListener("submit", e => {
+      e.preventDefault();
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (username === "davasyifa" && password === "davasyifa1") {
+        startWelcomeSequence();
+      } else {
+        alert("Username atau password salah! Silakan coba lagi.");
+      }
+    });
+
+    function startWelcomeSequence() {
+      loginContainer.classList.add("hiding");
+      setTimeout(() => {
+        loginContainer.style.display = "none";
+        showWelcome();
+      }, 1000);
+    }
+
+    function showWelcome() {
+      welcomeContainer.classList.add("show");
+      generateParticles(40);
+      setTimeout(() => {
+        welcomeContainer.classList.remove("show");
+        clearParticles();
+        showMainPage();
+      }, 5000);
+    }
+
+    function showMainPage() {
+      mainContainer.classList.add("show");
+      mainContainer.focus();
+      renderPhotos();
+      renderQuote();
+      renderSongList();
+      // Play first song automatically
+      if (songs.length) {
+        currentSongId = songs[0].id;
+        audioPlayer.src = songs[0].src;
+        audioPlayer.play().catch(() => {});
+        updateSelectedSong();
+      }
+    }
+
+    function generateParticles(count) {
+      particlesContainer.innerHTML = "";
+      for (let i = 0; i < count; i++) {
+        const isFlower = Math.random() > 0.5;
+        const el = document.createElement("div");
+        el.classList.add("particle");
+        el.classList.add(isFlower ? "flower" : "heart");
+        const startX = Math.random() * 100;
+        const size = 10 + Math.random() * 18;
+        el.style.left = startX + "vw";
+        el.style.width = size + "px";
+        el.style.height = size + "px";
+        const animDuration = 4000 + Math.random() * 3000;
+        el.style.animation = `floatUp ${animDuration}ms ease-in-out forwards`;
+        el.style.animationDelay = (i * 100) + "ms";
+        particlesContainer.appendChild(el);
+      }
+    }
+
+    function clearParticles() {
+      particlesContainer.innerHTML = "";
+    }
+
+    function renderPhotos() {
+      photoGallery.innerHTML = "";
+      allPhotos.forEach((url, i) => {
+        const img = document.createElement("img");
+        img.src = url;
+        img.alt = `Foto Ke-${i+1}`;
+        img.tabIndex = 0;
+        img.title = "Klik untuk hapus foto";
+        img.style.transition = "transform 0.3s ease, height 0.3s ease, width 0.3s ease";
+        img.style.objectFit = "cover";
+        if(autoSize){
+          img.style.width = "auto";
+          img.style.height = "auto";
+          img.style.maxWidth = "170px";
+          img.style.maxHeight = "170px";
+          img.style.margin = "5px";
+          img.style.borderRadius = "16px";
+          img.style.boxShadow = "0 3px 8px rgb(216 27 96 / 0.5)";
+        } else {
+          img.style.setProperty("--photo-size", currentPhotoSize + "px");
+          img.style.width = "100%";
+          img.style.height = currentPhotoSize + "px";
+          img.style.margin = "0";
+        }
+        img.addEventListener("click", () => {
+          if(confirm("Hapus foto ini?")) {
+            allPhotos.splice(i, 1);
+            saveAllPhotos();
+            renderPhotos();
+          }
+        });
+        photoGallery.appendChild(img);
+      });
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    photoFileInput.addEventListener("change", async e => {
+      const files = e.target.files;
+      if (!files || files.length === 0) {
+        alert("Tidak ada file dipilih.");
+        return;
+      }
+      try {
+        for(const file of files){
+          if(!file.type.startsWith("image/")) continue;
+          const base64 = await fileToBase64(file);
+          allPhotos.push(base64);
+        }
+        saveAllPhotos();
+        renderPhotos();
+      } catch (err) {
+        alert("Gagal memproses foto.");
+      }
+      photoFileInput.value = "";
+    });
+
+    addPhotoBtn.addEventListener("click", () => {
+      if(allPhotos.length === 0) {
+        alert("Pilih dulu foto dari perangkat dengan klik 'Pilih Foto dari Galeri'");
+        return;
+      }
+      alert("Foto sudah ditambahkan dan akan tersimpan walau halaman di-refresh!");
+    });
+
+    photoSizeRange.addEventListener("input", (e) => {
+      currentPhotoSize = e.target.value;
+      photoSizeLabel.textContent = currentPhotoSize;
+      if(!autoSize){
+        renderPhotos();
+      }
+    });
+    autoSizeCheckbox.addEventListener("change", (e) => {
+      autoSize = e.target.checked;
+      if(autoSize){
+        photoSizeRange.disabled = true;
+        photoGallery.style.setProperty("--photo-gap", "10px");
+      } else {
+        photoSizeRange.disabled = false;
+        photoGallery.style.setProperty("--photo-gap", "14px");
+      }
+      renderPhotos();
+    });
+
+    function renderQuote() {
+      quotesContainer.textContent = quotes[currentQuoteIndex];
+      setInterval(() => {
+        currentQuoteIndex++;
+        if(currentQuoteIndex >= quotes.length) currentQuoteIndex = 0;
+        quotesContainer.textContent = quotes[currentQuoteIndex];
+      }, 10000);
+    }
+
+    function renderSongList() {
+      songListContainer.innerHTML = "";
+      songs.forEach(song => {
+        const btn = document.createElement("button");
+        btn.className = "song-button";
+        btn.setAttribute("role", "listitem");
+        btn.textContent = song.name;
+        btn.title = "Putar " + song.name;
+        btn.tabIndex = 0;
+        btn.addEventListener("click", () => {
+          if (currentSongId === song.id) {
+            if(audioPlayer.paused) audioPlayer.play();
+            else audioPlayer.pause();
+          } else {
+            currentSongId = song.id;
+            audioPlayer.src = song.src;
+            audioPlayer.play();
+            updateSelectedSong();
+          }
+        });
+        songListContainer.appendChild(btn);
+      });
+    }
+    function updateSelectedSong() {
+      const buttons = songListContainer.querySelectorAll(".song-button");
+      buttons.forEach(btn => {
+        if (btn.textContent === songs.find(s => s.id === currentSongId)?.name) {
+          btn.classList.add("selected");
+        } else {
+          btn.classList.remove("selected");
+        }
+      });
+    }
+
+    audioPlayer.addEventListener("ended", () => {
+      currentSongId = null;
+      updateSelectedSong();
+    });
+
+    // Initial load allPhotos from localStorage or defaults if empty
+    loadAllPhotos();
+
+  })();
+
+  // Animasi float bunga dan hati
+  const styleSheet = document.createElement("style");
+  styleSheet.innerText = `
+  @keyframes floatUp {
+    0% {
+      opacity: 0;
+      transform: translateY(50px) scale(0.5);
+    }
+    50% {
+      opacity: 1;
+      transform: translateY(-20px) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-120px) scale(0.5);
+    }
+  }
+  `;
+  document.head.appendChild(styleSheet);
+</script>
+</body>
+</html>
